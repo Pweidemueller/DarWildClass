@@ -1,0 +1,12 @@
+name: darwild
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+dependencies:
+  - timm
+  - jupyter
+  - opencv
+  - pillow
+  - matplotlib
+prefix: /Users/pweide/opt/miniconda3/envs/python3/envs/darwild

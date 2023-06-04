@@ -13,7 +13,7 @@ Some issues identified:
 
 ## Environment
 
-I'm using python, mainly with the `timm` package. Packages are installed in a conda environment `darwild`. All packages and versions can be found in this file: `XXX.yml`.
+I'm using python, mainly with the `timm` package. Packages are installed in a conda environment `darwild`. All packages and versions can be found in this file: `darwild.yml`.
 
 ## Procedure
 
