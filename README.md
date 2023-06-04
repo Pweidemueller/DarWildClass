@@ -22,6 +22,11 @@ I'm using python, mainly with the `timm` package. Packages are installed in a co
 3. Get the top 5 predictions in each frame.
 4. Count in how many frames each top 5 class was detected.
 
+Ideas how to do better:
+
+1. Create overlapping patches in each frame and run classification on patches (such that e.g. centre cropping on whole image, doesn't just crop out the animal); possible problem: a lot of patches might not contain any animal, depending where the animal passes it might fill the whole image, so cropping will actually cut it up (e.g. s. otter)
+2. First use another model that identifies the animal in the picture and provides a bounding box which then can be used to crop the image and then pass it to the classifier.
+
 ## Testing
 
 ### `DSCF0935.MP4` - Ducks
@@ -64,10 +69,10 @@ The pigeon is very well visible in the last frames.
 
 It at least understands that it's a bird, but can't find pigeon here.
 
-### - Mouse
+### `DSCF0115.MP4` - Mouse
 
 Mouse is on the right hand side of the image, quite mouse-like.
 
 [{'label': 'vine_snake', 'number of frames:': 243}, {'label': 'hen-of-the-woods, hen_of_the_woods, Polyporus_frondosus, Grifola_frondosa', 'number of frames:': 240}, {'label': 'bolete', 'number of frames:': 222}, {'label': 'mushroom', 'number of frames:': 203}, {'label': 'ruffed_grouse, partridge, Bonasa_umbellus', 'number of frames:': 162}, {'label': 'mongoose', 'number of frames:': 83}, {'label': 'stinkhorn, carrion_fungus', 'number of frames:': 79}, {'label': 'fox_squirrel, eastern_fox_squirrel, Sciurus_niger', 'number of frames:': 70}, {'label': 'weasel', 'number of frames:': 69}, {'label': 'armadillo', 'number of frames:': 63}, {'label': 'mink', 'number of frames:': 38}, {'label': 'beaver', 'number of frames:': 11}, {'label': 'partridge', 'number of frames:': 9}, {'label': 'wood_rabbit, cottontail, cottontail_rabbit', 'number of frames:': 8}, {'label': 'indri, indris, Indri_indri, Indri_brevicaudatus', 'number of frames:': 8}, {'label': 'kit_fox, Vulpes_macrotis', 'number of frames:': 3}, {'label': 'mousetrap', 'number of frames:': 3}, {'label': 'garter_snake, grass_snake', 'number of frames:': 2}, {'label': 'polecat, fitch, foulmart, foumart, Mustela_putorius', 'number of frames:': 2}, {'label': 'macaque', 'number of frames:': 2}, {'label': 'quail', 'number of frames:': 2}, {'label': 'junco, snowbird', 'number of frames:': 2}, {'label': 'agaric', 'number of frames:': 1}, {'label': 'night_snake, Hypsiglena_torquata', 'number of frames:': 1}, {'label': 'water_snake', 'number of frames:': 1}, {'label': 'whiptail, whiptail_lizard', 'number of frames:': 1}, {'label': 'otter', 'number of frames:': 1}, {'label': 'water_ouzel, dipper', 'number of frames:': 1}]
 
-It finds a mouse trap, but not a mouse :'). 
+It finds a mouse trap, but not a mouse :').
