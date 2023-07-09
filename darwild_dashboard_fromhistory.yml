@@ -1,0 +1,12 @@
+name: darwild_dashboard
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+dependencies:
+  - dash
+  - pandas
+  - matplotlib
+  - plotly
+  - dash-bootstrap-components
+prefix: /Users/pweide/opt/miniconda3/envs/python3/envs/darwild_dashboard

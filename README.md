@@ -15,6 +15,12 @@ Some issues identified:
 
 I'm using python, mainly with the `timm` package. Packages are installed in a conda environment `darwild`. All packages and versions can be found in this file: `darwild.yml` (`darwild_fromhistory.yml` for just the requested packages).
 
+For the dashboard use the `darwild_dashboard.yml` and `darwild_dashboard_fromhistory.yml` files. And then run
+```
+conda activate darwild_dashboard
+python dashboard.py
+```
+
 ## Procedure
 
 1. Get all frames in the 10s clip.

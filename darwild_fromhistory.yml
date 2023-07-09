@@ -9,4 +9,9 @@ dependencies:
   - opencv
   - pillow
   - matplotlib
+  - nltk
+  - pandas
+  - ca-certificates
+  - certifi
+  - openssl
 prefix: /Users/pweide/opt/miniconda3/envs/python3/envs/darwild

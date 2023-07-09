@@ -19,12 +19,14 @@ def get_my_format(sightings_df):
     sightings_df['Year'] = sightings_df['Timestamp'].dt.year
     sightings_df['Month'] = sightings_df['Timestamp'].dt.month
 
+    sightings_df = sightings_df.set_index('Timestamp')
+
     return(sightings_df)
 
 def group_daily_sigthings(sightings_df):
 
     # Resample the data by day, grouping by 'Animal' and 'Camera' and counting the number of sightings
-    daily_sightings = sightings_df.set_index('Timestamp').groupby(['Animal', 'Camera']).resample('D').size().reset_index(name='Count')
+    daily_sightings = sightings_df.groupby(['Animal', 'Camera']).resample('D').size().reset_index(name='Count')
 
     # Rename the 'Timestamp' column to 'Date'
     daily_sightings.rename(columns={'Timestamp': 'Date'}, inplace=True)
@@ -69,8 +71,6 @@ def group_daily_sigthings(sightings_df):
 #     # Return the figure
 #     return fig
 
-app = dash.Dash(external_stylesheets=[dbc.themes.COSMO])
-
 animal_images = {
     'Ducks': '../images/Ducks.png',
     'Otter': '../images/Otter.png',
@@ -91,6 +91,7 @@ animal_classes = list(animal_images.keys())
 dropdown_options = [{'label': cls, 'value': cls} for cls in animal_classes]
 
 # fig = generate_timeline_sightings(sightings_df)
+app = dash.Dash(external_stylesheets=[dbc.themes.COSMO], title="DarWild Sightings")
 
 # the style arguments for the sidebar. We use position:fixed and a fixed width
 SIDEBAR_STYLE = {
@@ -136,7 +137,6 @@ content = html.Div(id="page-content", style=CONTENT_STYLE)
 
 app.layout = html.Div([dcc.Location(id="url"), sidebar, content])
 
-
 @app.callback(Output("page-content", "children"), [Input("url", "pathname")])
 def render_page_content(pathname):
     if pathname == "/":
@@ -150,20 +150,30 @@ def render_page_content(pathname):
                     value=cameras[3]
                 ),
                 dcc.Graph(id='sightings-graph'),
-                dcc.Dropdown(
-                    id='aggregation-dropdown',
-                    options=[
-                        {'label': 'Week', 'value': 'W'},
-                        {'label': 'Month', 'value': 'M'},
-                        {'label': 'Year', 'value': 'Y'}
-                    ],
-                    placeholder='Select a time aggregation level'
+                # dcc.Dropdown(
+                #     id='aggregation-dropdown',
+                #     options=[
+                #         {'label': 'Week', 'value': 'W'},
+                #         {'label': 'Month', 'value': 'M'},
+                #         {'label': 'Year', 'value': 'Y'}
+                #     ],
+                #     placeholder='Select a time aggregation level'
+                # ),
+                # dcc.Dropdown(
+                #     id='period-dropdown',
+                #     placeholder='Select a specific time period'
+                # ),
+                # dcc.Graph(id='sightings-barplot')
+                dcc.DatePickerRange(
+                    id='date-picker',
+                    start_date_placeholder_text="Start Period",
+                    end_date_placeholder_text="End Period",
+                    calendar_orientation='vertical',
+                    display_format='D/M/Y',
+                    min_date_allowed=sightings_df.index.min().date(),
+                    max_date_allowed=sightings_df.index.max().date(),
                 ),
-                dcc.Dropdown(
-                    id='period-dropdown',
-                    placeholder='Select a specific time period'
-                ),
-                dcc.Graph(id='sightings-barplot')
+                dcc.Graph(id='period-bar-plot')
             ]
         )
         return home
@@ -191,7 +201,17 @@ def render_page_content(pathname):
                     value=np.max(years),
                     style={'width': '50%'}
                 ),
-                dcc.Graph(id='animal-month-comp')
+                dcc.Graph(id='animal-month-comp'),
+                dcc.DatePickerRange(
+                    id='date-picker-radar',
+                    start_date_placeholder_text="Start Period",
+                    end_date_placeholder_text="End Period",
+                    calendar_orientation='vertical',
+                    display_format='D/M/Y',
+                    min_date_allowed=sightings_df.index.min().date(),
+                    max_date_allowed=sightings_df.index.max().date(),
+                ),
+                dcc.Graph(id='radar-plot')
             ]
         )
         return page2
@@ -206,10 +226,73 @@ def render_page_content(pathname):
     )
 
 @app.callback(
+    Output('period-bar-plot', 'figure'),
+    [Input('date-picker', 'start_date'),
+     Input('date-picker', 'end_date')]
+)
+def update_graph(start_date, end_date):
+    if start_date is not None and end_date is not None:
+        mask = (sightings_df.index >= start_date) & (sightings_df.index <= end_date)
+        filtered_df = sightings_df.loc[mask]
+        counts = filtered_df['Animal'].value_counts()
+        fig = go.Figure([go.Bar(x=counts.index, y=counts.values)])
+    else:
+        fig = go.Figure()
+    fig.update_layout(
+        title='Animal Sightings',
+        xaxis_title='Animal',
+        yaxis_title='Number of Sightings'
+    )
+    return fig
+
+@app.callback(
+    Output('radar-plot', 'figure'),
+    [Input('date-picker-radar', 'start_date'),
+     Input('date-picker-radar', 'end_date')]
+)
+def update_graph(start_date, end_date):
+    if start_date is not None and end_date is not None:
+        mask = (sightings_df.index >= start_date) & (sightings_df.index <= end_date)
+        filtered_df = sightings_df.loc[mask]
+    else:
+        filtered_df = sightings_df
+
+    hourly_sightings = filtered_df.groupby(filtered_df.index.hour)['Animal'].value_counts().unstack().fillna(0)
+    print(hourly_sightings.index.max())
+    fig = go.Figure()
+
+    for animal in hourly_sightings.columns:
+        fig.add_trace(go.Scatterpolar(
+            r=hourly_sightings[animal],
+            theta=hourly_sightings.index * 360 / 24,  # Convert hours to degrees,
+            fill='toself',
+            name=animal
+        ))
+
+    fig.update_layout(
+        polar=dict(
+            radialaxis=dict(
+                visible=True,
+                range=[0, hourly_sightings.values.max()]
+            ),
+            angularaxis=dict(  # Add this to set the radial labels to hours
+                tickvals=list(range(0, 360, 15)),  # Every 15 degrees
+                ticktext=list(range(0, 24, 1)),  # Every hour
+                direction='clockwise',  # Change the direction of rotation
+                rotation=90  # Rotate the plot to position 0-hour at the top
+            )
+            ),
+        showlegend=True,
+        title="Distribution of sightings over 24h" 
+    )
+
+    return fig
+
+@app.callback(
     Output('animal-month-comp', 'figure'),
     [Input('year-dropdown', 'value')]
 )
-def update_graph(selected_year):
+def update_month_comp(selected_year):
     dff = sightings_df[(sightings_df['Year'] == selected_year)]
     dff = dff.groupby(['Month', 'Animal']).size().reset_index(name='Count')
     
@@ -235,7 +318,7 @@ def update_graph(selected_year):
     Output('sightings-graph', 'figure'),
     [Input('camera-dropdown', 'value')]
 )
-def update_graph(selected_camera):
+def update_camera_scatterplot(selected_camera):
     fig = go.Figure()
     if selected_camera == 'All Cameras':
         tmp = daily_sightings.groupby(['Date', 'Animal'])['Count'].agg('sum').reset_index(name='Count')
