@@ -3,7 +3,7 @@ from dash import html
 from dash import dcc
 import dash_bootstrap_components as dbc
 from dash import Input, Output, dcc, html
-
+import base64
 import plotly.graph_objects as go
 
 import pandas as pd
@@ -86,6 +86,9 @@ cameras = np.append(cameras, 'All Cameras')
 animals = sorted(sightings_df.Animal.unique())
 years = sorted(sightings_df.Year.unique())
 
+cameras_islands = base64.b64encode(open('../Images/cameraplacement.png', 'rb').read())
+otter_logo = base64.b64encode(open('../Images/logo.png', 'rb').read())
+
 # Define the animal class options for the dropdown menu
 animal_classes = list(animal_images.keys())
 dropdown_options = [{'label': cls, 'value': cls} for cls in animal_classes]
@@ -114,7 +117,8 @@ CONTENT_STYLE = {
 
 sidebar = html.Div(
     [
-        html.H2("DarWild Sightings", className="display-4"),
+        # html.H2("DarWild Sightings", className="display-4"),
+        html.Img(src='data:image/png;base64,{}'.format(otter_logo.decode()), style={'width':200}),
         html.Hr(),
         html.P(
             "Explore interactive plots of animal sightings in Darwin College.", className="lead"
@@ -144,6 +148,7 @@ def render_page_content(pathname):
             [
                 html.H2("Welcome to DarWild Sightings Dashboard"),
                 html.P("At Darwin college we have three wild life cameras, that capture footage every time they register movement. Every week the footage gets analysed and animals in the clips are classified automatically using neural networks."),
+                html.Img(src='data:image/png;base64,{}'.format(cameras_islands.decode()), style={'width':'60%'}),
                 dcc.Dropdown(
                     id='camera-dropdown',
                     options=[{'label': camera, 'value': camera} for camera in cameras],
